@@ -28,7 +28,7 @@ contract CipherPerpsTest is Test {
         feed = new MockAggregatorV3(8, 3_000e8);
         oracle = new PriceOracle(address(feed), 1 hours);
         engine = new TradingEngine();
-        pm = new PositionManager(address(usdc), address(oracle), address(engine));
+        pm = new PositionManager(address(usdc), address(oracle));
         liq = new LiquidationEngine(address(pm), address(oracle), address(engine), 500);
         pm.setLiquidationEngine(address(liq));
 
@@ -36,22 +36,15 @@ contract CipherPerpsTest is Test {
 
         vm.startPrank(trader);
         usdc.approve(address(pm), type(uint256).max);
-        pm.deposit(1_000e6);
+        pm.depositCollateral(1_000e6);
         vm.stopPrank();
     }
 
     function test_openAndClosePosition_happyPath() public {
         vm.startPrank(trader);
 
-        pm.openPosition(
-            true,
-            500e6,
-            FheUint256.wrap(5_000e6), // $5k notional
-            FheUint256.wrap(5e18) // 5x
-        );
+        pm.openPosition(FheUint256.wrap(5_000e6), FheUint256.wrap(5e18), true);
 
-        // price up 10%
-        feed.setAnswer(3_300e8);
         pm.closePosition();
 
         vm.stopPrank();
@@ -60,12 +53,7 @@ contract CipherPerpsTest is Test {
     function test_liquidationFlag_canBecomeTrue() public {
         vm.startPrank(trader);
 
-        pm.openPosition(
-            true,
-            200e6,
-            FheUint256.wrap(10_000e6),
-            FheUint256.wrap(10e18)
-        );
+        pm.openPosition(FheUint256.wrap(10_000e6), FheUint256.wrap(10e18), true);
 
         // big drop
         feed.setAnswer(1_500e8);

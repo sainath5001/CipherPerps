@@ -12,13 +12,6 @@ interface IPriceOracleLike {
     function getPrice1e8() external view returns (uint256);
 }
 
-interface ITradingEngineLike {
-    function computePnlUsdc(bool isLong, uint256 entryPrice1e8, uint256 priceNow1e8, euint256 sizeNotionalUsdc1e6)
-        external
-        pure
-        returns (int256);
-}
-
 /// @notice Stores per-user position state and collateral.
 /// @dev MVP constraints: single market, one position per user.
 contract PositionManager {
@@ -27,6 +20,7 @@ contract PositionManager {
     error PositionExists();
     error NoPosition();
     error NotLiquidationEngine();
+    error NoCollateral();
     error InvalidLeverage();
 
     struct Position {
@@ -34,28 +28,25 @@ contract PositionManager {
         bool isLong; // public by design for MVP
         uint256 collateralUsdc; // public
         uint256 entryPrice1e8; // public
-        euint256 sizeNotionalUsdc1e6; // private (placeholder type)
-        euint256 leverageE18; // private (placeholder type), leverage with 1e18 scale
+        euint256 positionSize; // encrypted (placeholder type)
+        euint256 leverage; // encrypted (placeholder type)
     }
 
     IERC20Like public immutable collateralToken; // USDC
     IPriceOracleLike public immutable oracle;
-    ITradingEngineLike public immutable engine;
     address public liquidationEngine;
 
     mapping(address => uint256) public collateralBalance; // free collateral
     mapping(address => Position) internal positions;
 
-    event Deposit(address indexed user, uint256 amount);
-    event Withdraw(address indexed user, uint256 amount);
+    event CollateralDeposited(address indexed user, uint256 amount);
     event PositionOpened(address indexed user, bool isLong, uint256 collateralUsdc, uint256 entryPrice1e8);
-    event PositionClosed(address indexed user, int256 pnlUsdc, uint256 exitPrice1e8);
+    event PositionClosed(address indexed user);
     event PositionLiquidated(address indexed user, address indexed liquidator, uint256 price1e8);
 
-    constructor(address usdc, address oracle_, address engine_) {
+    constructor(address usdc, address oracle_) {
         collateralToken = IERC20Like(usdc);
         oracle = IPriceOracleLike(oracle_);
-        engine = ITradingEngineLike(engine_);
     }
 
     function setLiquidationEngine(address liq) external {
@@ -68,65 +59,49 @@ contract PositionManager {
         return positions[user];
     }
 
-    function deposit(uint256 amountUsdc) external {
-        require(collateralToken.transferFrom(msg.sender, address(this), amountUsdc), "TRANSFER_FROM");
-        collateralBalance[msg.sender] += amountUsdc;
-        emit Deposit(msg.sender, amountUsdc);
+    function depositCollateral(uint256 amount) external {
+        require(amount > 0, "AMOUNT");
+        require(collateralToken.transferFrom(msg.sender, address(this), amount), "TRANSFER_FROM");
+        collateralBalance[msg.sender] += amount;
+        emit CollateralDeposited(msg.sender, amount);
     }
 
-    function withdraw(uint256 amountUsdc) external {
-        require(collateralBalance[msg.sender] >= amountUsdc, "BAL");
-        collateralBalance[msg.sender] -= amountUsdc;
-        require(collateralToken.transfer(msg.sender, amountUsdc), "TRANSFER");
-        emit Withdraw(msg.sender, amountUsdc);
-    }
-
-    function openPosition(bool isLong, uint256 collateralToLockUsdc, euint256 sizeNotionalUsdc1e6, euint256 leverageE18)
-        external
-    {
+    function openPosition(euint256 size, euint256 leverage, bool isLong) external {
         Position storage p = positions[msg.sender];
         if (p.isOpen) revert PositionExists();
 
-        uint256 lev = leverageE18.unwrap(); // placeholder
+        uint256 freeCollateral = collateralBalance[msg.sender];
+        if (freeCollateral == 0) revert NoCollateral();
+
+        uint256 lev = leverage.unwrap(); // placeholder
         if (lev < 1e18 || lev > 50e18) revert InvalidLeverage();
 
-        require(collateralBalance[msg.sender] >= collateralToLockUsdc, "BAL");
-        collateralBalance[msg.sender] -= collateralToLockUsdc;
+        // MVP: lock all deposited collateral into the position.
+        collateralBalance[msg.sender] = 0;
 
         uint256 entry = oracle.getPrice1e8();
         positions[msg.sender] = Position({
             isOpen: true,
             isLong: isLong,
-            collateralUsdc: collateralToLockUsdc,
+            collateralUsdc: freeCollateral,
             entryPrice1e8: entry,
-            sizeNotionalUsdc1e6: sizeNotionalUsdc1e6,
-            leverageE18: leverageE18
+            positionSize: size,
+            leverage: leverage
         });
 
-        emit PositionOpened(msg.sender, isLong, collateralToLockUsdc, entry);
+        emit PositionOpened(msg.sender, isLong, freeCollateral, entry);
     }
 
     function closePosition() external {
         Position storage p = positions[msg.sender];
         if (!p.isOpen) revert NoPosition();
 
-        uint256 priceNow = oracle.getPrice1e8();
-        int256 pnl = engine.computePnlUsdc(p.isLong, p.entryPrice1e8, priceNow, p.sizeNotionalUsdc1e6);
-
         uint256 returnedCollateral = p.collateralUsdc;
         delete positions[msg.sender];
 
-        // Settlement in plaintext USDC (MVP). Realized PnL becomes observable via this transfer.
-        if (pnl >= 0) {
-            uint256 payout = returnedCollateral + uint256(pnl);
-            require(collateralToken.transfer(msg.sender, payout), "TRANSFER");
-        } else {
-            uint256 loss = uint256(-pnl);
-            uint256 payout = returnedCollateral > loss ? (returnedCollateral - loss) : 0;
-            require(collateralToken.transfer(msg.sender, payout), "TRANSFER");
-        }
-
-        emit PositionClosed(msg.sender, pnl, priceNow);
+        // Storage-only MVP: return locked collateral to the user's free balance.
+        collateralBalance[msg.sender] += returnedCollateral;
+        emit PositionClosed(msg.sender);
     }
 
     function liquidate(address user, address liquidator) external {
@@ -136,9 +111,9 @@ contract PositionManager {
         if (!p.isOpen) revert NoPosition();
 
         uint256 priceNow = oracle.getPrice1e8();
+        // For MVP: seized collateral remains in the contract (insurance fund / future logic).
         delete positions[user];
 
-        // For MVP: funds stay in contract; liquidation incentive handled by LiquidationEngine in later steps.
         emit PositionLiquidated(user, liquidator, priceNow);
     }
 }

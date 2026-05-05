@@ -9,8 +9,8 @@ interface IPositionManagerLike {
         bool isLong;
         uint256 collateralUsdc;
         uint256 entryPrice1e8;
-        euint256 sizeNotionalUsdc1e6;
-        euint256 leverageE18;
+        euint256 positionSize;
+        euint256 leverage;
     }
 
     function getPosition(address user) external view returns (Position memory);
@@ -53,10 +53,11 @@ contract LiquidationEngine {
         if (!p.isOpen) return false;
 
         uint256 priceNow = oracle.getPrice1e8();
-        int256 pnl = engine.computePnlUsdc(p.isLong, p.entryPrice1e8, priceNow, p.sizeNotionalUsdc1e6);
+        // Placeholder: we treat `positionSize` as the "notional" input for TradingEngine.
+        int256 pnl = engine.computePnlUsdc(p.isLong, p.entryPrice1e8, priceNow, p.positionSize);
 
         int256 equity = int256(p.collateralUsdc) + pnl;
-        uint256 notional = p.sizeNotionalUsdc1e6.unwrap(); // placeholder
+        uint256 notional = p.positionSize.unwrap(); // placeholder
         uint256 mm = (notional * maintenanceMarginBps) / 10_000;
 
         return equity < int256(mm);

@@ -20,7 +20,7 @@ contract DeployCipherPerps is Script {
         MockAggregatorV3 feed = new MockAggregatorV3(8, 3_000e8); // ETH = $3000
         PriceOracle oracle = new PriceOracle(address(feed), 1 hours);
         TradingEngine engine = new TradingEngine();
-        PositionManager pm = new PositionManager(address(usdc), address(oracle), address(engine));
+        PositionManager pm = new PositionManager(address(usdc), address(oracle));
         LiquidationEngine liq = new LiquidationEngine(address(pm), address(oracle), address(engine), 500); // 5% mm
         pm.setLiquidationEngine(address(liq));
 
