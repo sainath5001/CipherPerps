@@ -17,7 +17,8 @@ contract PriceOracle {
         staleAfter = staleAfterSeconds;
     }
 
-    function getPrice1e8() external view returns (uint256) {
+    /// @notice Returns latest ETH/USD price normalized to 8 decimals.
+    function getLatestPrice() external view returns (uint256) {
         (, int256 answer,, uint256 updatedAt,) = feed.latestRoundData();
         if (answer <= 0) revert BadPrice();
         if (block.timestamp - updatedAt > staleAfter) revert StalePrice();
@@ -27,6 +28,11 @@ contract PriceOracle {
         if (d == 8) return p;
         if (d > 8) return p / (10 ** (d - 8));
         return p * (10 ** (8 - d));
+    }
+
+    /// @notice Backwards-compatible alias for the rest of the MVP.
+    function getPrice1e8() external view returns (uint256) {
+        return this.getLatestPrice();
     }
 }
 
