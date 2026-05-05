@@ -13,6 +13,21 @@ Foundry consists of:
 
 https://book.getfoundry.sh/
 
+## CipherPerps (contracts)
+
+Minimal MVP contract layout:
+
+- **`src/PositionManager.sol`**: user collateral + per-user position storage (1 position/user).
+- **`src/TradingEngine.sol`**: simple PnL computation (placeholder math).
+- **`src/PriceOracle.sol`**: Chainlink feed adapter returning a normalized 1e8 price.
+- **`src/LiquidationEngine.sol`**: maintenance-margin liquidation gate + liquidation entrypoint.
+- **`src/MockUSDC.sol`**: simple 6-decimal ERC20 used as collateral for local dev/tests.
+- **`src/interfaces/IChainlinkAggregatorV3.sol`**: Chainlink AggregatorV3 interface.
+- **`src/fhe/FheTypes.sol`**: placeholder `euint256` type until Zama FHE integration.
+- **`src/mocks/MockAggregatorV3.sol`**: local test mock for Chainlink feed.
+- **`script/DeployCipherPerps.s.sol`**: deploy script wiring the system.
+- **`test/CipherPerps.t.sol`**: starter tests (open/close + liquidatability signal).
+
 ## Usage
 
 ### Build
