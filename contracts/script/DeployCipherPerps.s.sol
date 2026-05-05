@@ -21,7 +21,8 @@ contract DeployCipherPerps is Script {
         PriceOracle oracle = new PriceOracle(address(feed), 1 hours);
         TradingEngine engine = new TradingEngine();
         PositionManager pm = new PositionManager(address(usdc), address(oracle));
-        LiquidationEngine liq = new LiquidationEngine(address(pm), address(oracle), address(engine), 500); // 5% mm
+        // thresholdE18=0.05 (5%), rewardBps=50 (0.5%)
+        LiquidationEngine liq = new LiquidationEngine(address(pm), 5e16, 50);
         pm.setLiquidationEngine(address(liq));
 
         vm.stopBroadcast();

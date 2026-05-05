@@ -14,64 +14,54 @@ interface IPositionManagerLike {
     }
 
     function getPosition(address user) external view returns (Position memory);
-    function liquidate(address user, address liquidator) external;
+    function liquidate(address user, address liquidator, uint256 rewardUsdc) external;
 }
 
-interface IPriceOracleLike2 {
-    function getPrice1e8() external view returns (uint256);
-}
-
-interface ITradingEngineLike2 {
-    function computePnl(bool isLong, uint256 entryPrice, uint256 currentPrice, euint256 positionSize)
-        external
-        pure
-        returns (euint256);
-
-    function computeLoss(bool isLong, uint256 entryPrice, uint256 currentPrice, euint256 positionSize)
-        external
-        pure
-        returns (euint256);
-}
-
-/// @notice Minimal liquidation gate for MVP.
-/// @dev Placeholder risk: liquidatable if equity < maintenanceMarginBps * notional.
+/// @notice Manual liquidation based on an encrypted health factor.
+/// @dev Health rule: health = collateral / (positionSize * leverage).
 contract LiquidationEngine {
     using FheUint256 for euint256;
 
     IPositionManagerLike public immutable pm;
-    IPriceOracleLike2 public immutable oracle;
-    ITradingEngineLike2 public immutable engine;
 
-    uint256 public immutable maintenanceMarginBps;
+    /// @notice Liquidation threshold on health, scaled by 1e18.
+    /// @dev Liquidate when healthE18 < thresholdE18.
+    uint256 public immutable thresholdE18;
+
+    /// @notice Liquidator reward in basis points of collateral (1 bp = 0.01%).
+    uint256 public immutable liquidatorRewardBps;
 
     error NotLiquidatable();
 
-    constructor(address pm_, address oracle_, address engine_, uint256 maintenanceMarginBps_) {
+    constructor(address pm_, uint256 thresholdE18_, uint256 liquidatorRewardBps_) {
         pm = IPositionManagerLike(pm_);
-        oracle = IPriceOracleLike2(oracle_);
-        engine = ITradingEngineLike2(engine_);
-        maintenanceMarginBps = maintenanceMarginBps_;
+        thresholdE18 = thresholdE18_;
+        liquidatorRewardBps = liquidatorRewardBps_;
     }
 
     function isLiquidatable(address user) public view returns (bool) {
         IPositionManagerLike.Position memory p = pm.getPosition(user);
         if (!p.isOpen) return false;
 
-        uint256 priceNow = oracle.getPrice1e8();
-        // For liquidation we care about downside; PnL as defined is non-negative magnitude.
-        euint256 lossEnc = engine.computeLoss(p.isLong, p.entryPrice1e8, priceNow, p.positionSize);
-        uint256 loss = lossEnc.unwrap(); // placeholder until real encrypted comparisons
+        // denom = positionSize * leverage (leverage is 1e18-scaled).
+        // To keep units reasonable: exposure = (positionSize * leverage) / 1e18.
+        uint256 size = p.positionSize.unwrap(); // placeholder until real FHE decryption-free ops
+        uint256 levE18 = p.leverage.unwrap(); // placeholder
+        if (size == 0) return false;
 
-        uint256 equity = p.collateralUsdc > loss ? (p.collateralUsdc - loss) : 0;
-        uint256 notional = p.positionSize.unwrap(); // placeholder
-        uint256 mm = (notional * maintenanceMarginBps) / 10_000;
+        uint256 exposure = (size * levE18) / 1e18;
+        if (exposure == 0) return false;
 
-        return equity < mm;
+        uint256 healthE18 = (p.collateralUsdc * 1e18) / exposure;
+        return healthE18 < thresholdE18;
     }
 
     function liquidate(address user) external {
         if (!isLiquidatable(user)) revert NotLiquidatable();
-        pm.liquidate(user, msg.sender);
+
+        IPositionManagerLike.Position memory p = pm.getPosition(user);
+        uint256 reward = (p.collateralUsdc * liquidatorRewardBps) / 10_000;
+        pm.liquidate(user, msg.sender, reward);
     }
 }
 

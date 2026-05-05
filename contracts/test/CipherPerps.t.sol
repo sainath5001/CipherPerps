@@ -15,6 +15,7 @@ contract CipherPerpsTest is Test {
     using FheUint256 for uint256;
 
     address trader = address(0xBEEF);
+    address liquidator = address(0xCAFE);
 
     MockUSDC usdc;
     MockAggregatorV3 feed;
@@ -29,7 +30,7 @@ contract CipherPerpsTest is Test {
         oracle = new PriceOracle(address(feed), 1 hours);
         engine = new TradingEngine();
         pm = new PositionManager(address(usdc), address(oracle));
-        liq = new LiquidationEngine(address(pm), address(oracle), address(engine), 500);
+        liq = new LiquidationEngine(address(pm), 5e16, 50); // 5% health threshold, 0.5% reward
         pm.setLiquidationEngine(address(liq));
 
         usdc.mint(trader, 10_000e6);
@@ -53,14 +54,18 @@ contract CipherPerpsTest is Test {
     function test_liquidationFlag_canBecomeTrue() public {
         vm.startPrank(trader);
 
-        pm.openPosition(FheUint256.wrap(10_000e6), FheUint256.wrap(10e18), true);
-
-        // big drop
-        feed.setAnswer(1_500e8);
+        // Make health low by setting large size * leverage relative to collateral.
+        pm.openPosition(FheUint256.wrap(100_000e6), FheUint256.wrap(20e18), true);
         vm.stopPrank();
 
         bool can = liq.isLiquidatable(trader);
         assertTrue(can);
+
+        uint256 balBefore = usdc.balanceOf(liquidator);
+        vm.prank(liquidator);
+        liq.liquidate(trader);
+        uint256 balAfter = usdc.balanceOf(liquidator);
+        assertGt(balAfter, balBefore);
     }
 }
 

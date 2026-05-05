@@ -43,6 +43,7 @@ contract PositionManager {
     event PositionOpened(address indexed user, bool isLong, uint256 collateralUsdc, uint256 entryPrice1e8);
     event PositionClosed(address indexed user);
     event PositionLiquidated(address indexed user, address indexed liquidator, uint256 price1e8);
+    event LiquidationRewardPaid(address indexed user, address indexed liquidator, uint256 rewardUsdc);
 
     constructor(address usdc, address oracle_) {
         collateralToken = IERC20Like(usdc);
@@ -104,16 +105,23 @@ contract PositionManager {
         emit PositionClosed(msg.sender);
     }
 
-    function liquidate(address user, address liquidator) external {
+    function liquidate(address user, address liquidator, uint256 rewardUsdc) external {
         if (msg.sender != liquidationEngine) revert NotLiquidationEngine();
 
         Position storage p = positions[user];
         if (!p.isOpen) revert NoPosition();
 
+        uint256 collateral = p.collateralUsdc;
         uint256 priceNow = oracle.getPrice1e8();
-        // For MVP: seized collateral remains in the contract (insurance fund / future logic).
         delete positions[user];
 
+        if (rewardUsdc > collateral) rewardUsdc = collateral;
+        if (rewardUsdc > 0) {
+            require(collateralToken.transfer(liquidator, rewardUsdc), "REWARD_TRANSFER");
+            emit LiquidationRewardPaid(user, liquidator, rewardUsdc);
+        }
+
+        // Remaining collateral stays in the contract as a simple "insurance fund" for MVP.
         emit PositionLiquidated(user, liquidator, priceNow);
     }
 }
