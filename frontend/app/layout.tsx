@@ -3,6 +3,7 @@ import "@rainbow-me/rainbowkit/styles.css";
 
 import type { Metadata } from "next";
 import { Providers } from "./providers";
+import BlackBackground from "@/components/ui/black-background";
 
 export const metadata: Metadata = {
   title: "CipherPerps",
@@ -13,6 +14,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body>
+        <BlackBackground />
         <Providers>{children}</Providers>
       </body>
     </html>
