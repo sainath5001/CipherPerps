@@ -22,6 +22,16 @@ contract PositionManager {
     error NotLiquidationEngine();
     error NoCollateral();
     error InvalidLeverage();
+    error NotOwner();
+    error Reentrancy();
+    error InvalidLiquidationEngine();
+    error InvalidPositionSize();
+
+    uint256 public constant MIN_LEVERAGE_E18 = 1e18;
+    uint256 public constant MAX_LEVERAGE_E18 = 50e18;
+    // MVP-only sanity bound to avoid overflow/DoS in placeholder arithmetic.
+    // Real FHE integration should replace this with protocol-defined constraints.
+    uint256 public constant MAX_POSITION_SIZE = 1_000_000_000e6; // 1B (1e6 units)
 
     struct Position {
         bool isOpen;
@@ -35,6 +45,8 @@ contract PositionManager {
     IERC20Like public immutable collateralToken; // USDC
     IPriceOracleLike public immutable oracle;
     address public liquidationEngine;
+    address public immutable owner;
+    uint256 private locked;
 
     mapping(address => uint256) public collateralBalance; // free collateral
     mapping(address => Position) internal positions;
@@ -48,10 +60,24 @@ contract PositionManager {
     constructor(address usdc, address oracle_) {
         collateralToken = IERC20Like(usdc);
         oracle = IPriceOracleLike(oracle_);
+        owner = msg.sender;
     }
 
-    function setLiquidationEngine(address liq) external {
-        // For hackathon MVP: deployer-admin is omitted; set once if unset.
+    modifier onlyOwner() {
+        if (msg.sender != owner) revert NotOwner();
+        _;
+    }
+
+    modifier nonReentrant() {
+        if (locked == 1) revert Reentrancy();
+        locked = 1;
+        _;
+        locked = 0;
+    }
+
+    function setLiquidationEngine(address liq) external onlyOwner {
+        if (liq == address(0)) revert InvalidLiquidationEngine();
+        // set once
         require(liquidationEngine == address(0), "SET");
         liquidationEngine = liq;
     }
@@ -60,7 +86,7 @@ contract PositionManager {
         return positions[user];
     }
 
-    function depositCollateral(uint256 amount) external {
+    function depositCollateral(uint256 amount) external nonReentrant {
         require(amount > 0, "AMOUNT");
         require(collateralToken.transferFrom(msg.sender, address(this), amount), "TRANSFER_FROM");
         collateralBalance[msg.sender] += amount;
@@ -75,7 +101,11 @@ contract PositionManager {
         if (freeCollateral == 0) revert NoCollateral();
 
         uint256 lev = leverage.unwrap(); // placeholder
-        if (lev < 1e18 || lev > 50e18) revert InvalidLeverage();
+        if (lev < MIN_LEVERAGE_E18 || lev > MAX_LEVERAGE_E18) revert InvalidLeverage();
+
+        // Placeholder-only size sanity to avoid overflow/DoS in current non-FHE math.
+        uint256 s = size.unwrap();
+        if (s == 0 || s > MAX_POSITION_SIZE) revert InvalidPositionSize();
 
         // MVP: lock all deposited collateral into the position.
         collateralBalance[msg.sender] = 0;
@@ -105,7 +135,7 @@ contract PositionManager {
         emit PositionClosed(msg.sender);
     }
 
-    function liquidate(address user, address liquidator, uint256 rewardUsdc) external {
+    function liquidate(address user, address liquidator, uint256 rewardUsdc) external nonReentrant {
         if (msg.sender != liquidationEngine) revert NotLiquidationEngine();
 
         Position storage p = positions[user];

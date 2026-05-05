@@ -32,8 +32,14 @@ contract LiquidationEngine {
     uint256 public immutable liquidatorRewardBps;
 
     error NotLiquidatable();
+    error BadParams();
 
     constructor(address pm_, uint256 thresholdE18_, uint256 liquidatorRewardBps_) {
+        if (pm_ == address(0)) revert BadParams();
+        // threshold in (0, 1e18] is a reasonable MVP bound
+        if (thresholdE18_ == 0 || thresholdE18_ > 1e18) revert BadParams();
+        // cap rewards to 10% for MVP safety
+        if (liquidatorRewardBps_ > 1_000) revert BadParams();
         pm = IPositionManagerLike(pm_);
         thresholdE18 = thresholdE18_;
         liquidatorRewardBps = liquidatorRewardBps_;
@@ -49,6 +55,7 @@ contract LiquidationEngine {
         uint256 levE18 = p.leverage.unwrap(); // placeholder
         if (size == 0) return false;
 
+        // Avoid revert on overflow by bounding earlier in PositionManager (MVP placeholder).
         uint256 exposure = (size * levE18) / 1e18;
         if (exposure == 0) return false;
 
