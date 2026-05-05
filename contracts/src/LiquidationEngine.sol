@@ -22,10 +22,15 @@ interface IPriceOracleLike2 {
 }
 
 interface ITradingEngineLike2 {
-    function computePnlUsdc(bool isLong, uint256 entryPrice1e8, uint256 priceNow1e8, euint256 sizeNotionalUsdc1e6)
+    function computePnl(bool isLong, uint256 entryPrice, uint256 currentPrice, euint256 positionSize)
         external
         pure
-        returns (int256);
+        returns (euint256);
+
+    function computeLoss(bool isLong, uint256 entryPrice, uint256 currentPrice, euint256 positionSize)
+        external
+        pure
+        returns (euint256);
 }
 
 /// @notice Minimal liquidation gate for MVP.
@@ -53,14 +58,15 @@ contract LiquidationEngine {
         if (!p.isOpen) return false;
 
         uint256 priceNow = oracle.getPrice1e8();
-        // Placeholder: we treat `positionSize` as the "notional" input for TradingEngine.
-        int256 pnl = engine.computePnlUsdc(p.isLong, p.entryPrice1e8, priceNow, p.positionSize);
+        // For liquidation we care about downside; PnL as defined is non-negative magnitude.
+        euint256 lossEnc = engine.computeLoss(p.isLong, p.entryPrice1e8, priceNow, p.positionSize);
+        uint256 loss = lossEnc.unwrap(); // placeholder until real encrypted comparisons
 
-        int256 equity = int256(p.collateralUsdc) + pnl;
+        uint256 equity = p.collateralUsdc > loss ? (p.collateralUsdc - loss) : 0;
         uint256 notional = p.positionSize.unwrap(); // placeholder
         uint256 mm = (notional * maintenanceMarginBps) / 10_000;
 
-        return equity < int256(mm);
+        return equity < mm;
     }
 
     function liquidate(address user) external {
