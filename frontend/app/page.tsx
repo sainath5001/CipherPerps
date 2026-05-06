@@ -1,12 +1,80 @@
 import Image from "next/image";
-import Link from "next/link";
 
 import LandingNavbar from "@/components/ui/navigation-menu-4";
 import { HeroSection } from "@/components/ui/hero-odyssey";
+import { FAQ } from "@/components/ui/faq-tabs";
 import { CinematicFooter } from "@/components/ui/motion-footer";
 import { TestimonialsSection } from "@/components/ui/testimonials-columns-1";
 
 export default function HomePage() {
+  const categories = {
+    basics: "Basics",
+    privacy: "Privacy & FHE",
+    oracle: "Oracle & pricing",
+    risk: "Risk & liquidation",
+  };
+
+  const faqData = {
+    basics: [
+      {
+        question: "What is CipherPerps?",
+        answer:
+          "CipherPerps is a hackathon MVP for confidential perpetual futures (ETH/USDC). It separates a landing page from a simple trading terminal under /app.",
+      },
+      {
+        question: "Which network is the demo on?",
+        answer:
+          "The current demo targets Sepolia for fast iteration. The UI and deployment flow are set up to work with Sepolia contract addresses.",
+      },
+      {
+        question: "How do I try it?",
+        answer:
+          "Open the terminal at /app, connect a wallet, deposit collateral, and open/close a position. If you’re on the wrong chain, switch to Sepolia in your wallet.",
+      },
+    ],
+    privacy: [
+      {
+        question: "What is encrypted in CipherPerps?",
+        answer:
+          "The protocol is designed so position size and leverage can be encrypted (Zama FHE). In this MVP, those fields are still placeholders until the ABI evolves to pass ciphertext handles + proof.",
+      },
+      {
+        question: "Is this fully private today?",
+        answer:
+          "Not end-to-end yet. The repo includes the frontend encryption scaffolding, but the deployed Solidity ABI is still the MVP placeholder version.",
+      },
+      {
+        question: "Why use FHE for perps?",
+        answer:
+          "It allows users to express sensitive trade parameters without exposing them publicly, while the protocol can still enforce rules like health checks and liquidation conditions.",
+      },
+    ],
+    oracle: [
+      {
+        question: "Where does the price come from?",
+        answer:
+          "The demo uses Chainlink’s ETH/USD price feed on Sepolia via a simple onchain oracle adapter. Prices are read with 8 decimals (1e8).",
+      },
+      {
+        question: "Why ETH/USD instead of ETH/USDC?",
+        answer:
+          "For the MVP, the oracle feed is ETH/USD. Collateral is USDC-like units, and pricing is mapped to USD for simplicity and credibility.",
+      },
+    ],
+    risk: [
+      {
+        question: "How do liquidations work in the MVP?",
+        answer:
+          "A liquidation engine can close undercollateralized positions based on the oracle price. The liquidation pathway is intentionally simple so the core flow is easy to verify.",
+      },
+      {
+        question: "Does liquidation still work with encrypted parameters?",
+        answer:
+          "That’s part of the design goal: keep parameters private while maintaining enforceable risk checks. The MVP demonstrates the shape; full FHE integration requires the ciphertext/proof ABI update.",
+      },
+    ],
+  };
+
   return (
     <main className="relative min-h-screen overflow-x-hidden bg-background">
       <LandingNavbar />
@@ -64,27 +132,27 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section id="faq-roadmap" className="mt-16 grid gap-6 lg:grid-cols-2">
-          <div id="faq" className="rounded-2xl border border-border bg-panel/40 p-4 backdrop-blur">
-            <div className="text-sm text-slate-400">FAQ style section</div>
-            <div className="mt-2 text-xl font-semibold">Questions users actually ask</div>
-            <div className="mt-4 overflow-hidden rounded-xl border border-border">
-              <Image src="/images/gmx-faq.png" alt="FAQ reference" width={1400} height={900} className="h-auto w-full" />
+        <div id="faq" className="mt-16 rounded-2xl border border-border bg-panel/20 backdrop-blur">
+          <FAQ
+            title="Frequently Asked Questions"
+            subtitle="Let’s answer the important ones"
+            categories={categories}
+            faqData={faqData}
+            className="rounded-2xl bg-transparent"
+          />
+        </div>
+
+        <section id="roadmap" className="mt-16">
+          <div className="flex items-end justify-between gap-4">
+            <div>
+              <div className="text-sm text-slate-400">Roadmap</div>
+              <div className="text-2xl font-semibold">From MVP → encrypted perps</div>
             </div>
           </div>
-
-          <div id="roadmap" className="rounded-2xl border border-border bg-panel/40 p-4 backdrop-blur">
-            <div className="text-sm text-slate-400">Roadmap style section</div>
-            <div className="mt-2 text-xl font-semibold">From MVP to mainnet-grade</div>
-            <div className="mt-4 overflow-hidden rounded-xl border border-border">
-              <Image
-                src="/images/gmx-roadmap.png"
-                alt="Roadmap reference"
-                width={1400}
-                height={900}
-                className="h-auto w-full"
-              />
-            </div>
+          <div className="mt-6 grid gap-4 md:grid-cols-3">
+            <Feature title="v0 MVP" body="Single market, Chainlink pricing, basic liquidation path (Sepolia)." />
+            <Feature title="v1 FHE ABI" body="Accept ciphertext handles + proofs for encrypted position parameters." />
+            <Feature title="v2 Hardening" body="More markets, improved risk model, monitoring, audits, and mainnet readiness." />
           </div>
         </section>
 
