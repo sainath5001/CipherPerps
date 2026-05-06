@@ -1,15 +1,15 @@
 import Image from "next/image";
 import Link from "next/link";
 
-import { Header } from "@/components/Header";
+import LandingNavbar from "@/components/ui/navigation-menu-4";
 
 export default function HomePage() {
   return (
     <main className="min-h-screen">
-      <div className="mx-auto max-w-6xl px-4 py-6">
-        <Header variant="landing" />
+      <LandingNavbar />
 
-        <section className="mt-10 grid gap-8 lg:grid-cols-2 lg:items-center">
+      <div className="mx-auto max-w-6xl px-4 py-6">
+        <section id="why" className="mt-10 grid gap-8 lg:grid-cols-2 lg:items-center">
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-border bg-panel/40 px-3 py-1 text-xs text-slate-300">
               Sepolia demo • Chainlink ETH/USD • Zama FHE-ready
@@ -64,7 +64,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section className="mt-16">
+        <section id="features" className="mt-16">
           <div className="flex items-end justify-between gap-4">
             <div>
               <div className="text-sm text-slate-400">Why CipherPerps</div>
@@ -79,8 +79,8 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section className="mt-16 grid gap-6 lg:grid-cols-2">
-          <div className="rounded-2xl border border-border bg-panel/40 p-4 backdrop-blur">
+        <section id="faq-roadmap" className="mt-16 grid gap-6 lg:grid-cols-2">
+          <div id="faq" className="rounded-2xl border border-border bg-panel/40 p-4 backdrop-blur">
             <div className="text-sm text-slate-400">FAQ style section</div>
             <div className="mt-2 text-xl font-semibold">Questions users actually ask</div>
             <div className="mt-4 overflow-hidden rounded-xl border border-border">
@@ -88,7 +88,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-border bg-panel/40 p-4 backdrop-blur">
+          <div id="roadmap" className="rounded-2xl border border-border bg-panel/40 p-4 backdrop-blur">
             <div className="text-sm text-slate-400">Roadmap style section</div>
             <div className="mt-2 text-xl font-semibold">From MVP to mainnet-grade</div>
             <div className="mt-4 overflow-hidden rounded-xl border border-border">
@@ -103,7 +103,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        <footer className="mt-16 rounded-2xl border border-border bg-panel/30 p-6 text-sm text-slate-400 backdrop-blur">
+        <footer id="footer" className="mt-16 rounded-2xl border border-border bg-panel/30 p-6 text-sm text-slate-400 backdrop-blur">
           <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
             <div>
               <div className="font-semibold text-slate-200">CipherPerps</div>
