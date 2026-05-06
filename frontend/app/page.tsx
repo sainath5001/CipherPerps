@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import LandingNavbar from "@/components/ui/navigation-menu-4";
 import { CinematicFooter } from "@/components/ui/motion-footer";
+import { TestimonialsSection } from "@/components/ui/testimonials-columns-1";
 
 export default function HomePage() {
   return (
@@ -103,6 +104,8 @@ export default function HomePage() {
             </div>
           </div>
         </section>
+
+        <TestimonialsSection className="pb-2" />
       </div>
 
       <CinematicFooter />

@@ -1,6 +1,15 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com",
+        pathname: "/**"
+      }
+    ]
+  },
   webpack(config) {
     // RainbowKit/wagmi may pull optional deps meant for React Native / pretty logging.
     // For a web-only Next.js app we safely stub them to avoid build-time resolution errors.
