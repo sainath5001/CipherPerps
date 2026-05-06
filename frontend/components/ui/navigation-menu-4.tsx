@@ -115,7 +115,7 @@ const navigationLinks: TopLink[] = [
 
 export default function LandingNavbar() {
   return (
-    <header className="border-b border-border bg-background/40 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/30 md:px-6">
+    <header className="sticky top-0 z-50 border-b border-border bg-background/40 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/30 md:px-6">
       <div className="flex h-16 items-center justify-between gap-4">
         <div className="flex items-center gap-2">
           <Popover>

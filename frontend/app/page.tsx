@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import LandingNavbar from "@/components/ui/navigation-menu-4";
+import { HeroSection } from "@/components/ui/hero-odyssey";
 import { CinematicFooter } from "@/components/ui/motion-footer";
 import { TestimonialsSection } from "@/components/ui/testimonials-columns-1";
 
@@ -10,37 +11,19 @@ export default function HomePage() {
     <main className="relative min-h-screen overflow-x-hidden bg-background">
       <LandingNavbar />
 
+      <HeroSection />
+
       <div className="relative z-10 mx-auto max-w-6xl rounded-b-3xl border-b border-border bg-background px-4 py-6 shadow-[0_40px_90px_-35px_rgba(0,0,0,0.85)]">
         <section id="why" className="mt-10 grid gap-8 lg:grid-cols-2 lg:items-center">
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-border bg-panel/40 px-3 py-1 text-xs text-slate-300">
               Sepolia demo • Chainlink ETH/USD • Zama FHE-ready
             </div>
-            <h1 className="mt-4 text-4xl font-semibold tracking-tight text-slate-100 sm:text-5xl">
-              Confidential perpetuals
-              <span className="text-slate-300"> built for public chains.</span>
-            </h1>
-            <p className="mt-4 text-base leading-relaxed text-slate-300">
-              CipherPerps lets traders open ETH perpetual positions while keeping sensitive parameters private.
-              Position size and leverage are designed to be encrypted with Zama FHE.
+            <p className="mt-5 text-lg font-medium text-slate-200">Product snapshot</p>
+            <p className="mt-2 max-w-xl text-sm leading-relaxed text-slate-400">
+              The hero above previews the directional beam; this section summarizes how the MVP is wired (privacy intent,
+              oracle pricing, liquidation path).
             </p>
-
-            <div className="mt-6 flex flex-wrap gap-3">
-              <Link
-                href="/app"
-                className="rounded-xl bg-cyan-400 px-5 py-3 text-sm font-semibold text-slate-950"
-              >
-                Open App
-              </Link>
-              <a
-                className="rounded-xl border border-border bg-panel2 px-5 py-3 text-sm font-semibold"
-                href="https://sepolia.etherscan.io/address/0xFe97B52dC4219979e5524D244B8D8C0A39879B5F"
-                target="_blank"
-                rel="noreferrer"
-              >
-                View contracts
-              </a>
-            </div>
 
             <div className="mt-8 grid gap-3 sm:grid-cols-3">
               <Card title="Privacy-first" body="Size & leverage are designed to stay encrypted end-to-end." />
