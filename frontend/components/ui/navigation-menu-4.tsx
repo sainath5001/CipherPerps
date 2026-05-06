@@ -23,7 +23,7 @@ type SimpleItem = { href: string; label: string };
 type DescriptionItem = { href: string; label: string; description: string };
 type IconItem = { href: string; label: string; icon: "BookOpenIcon" | "LifeBuoyIcon" | "InfoIcon" };
 
-type TopLink = { href: string; label: "Home" } | ({ label: string; submenu: true } & (
+type TopLink = { href: string; label: string; submenu?: false } | ({ label: string; submenu: true } & (
   | { type: "description"; items: DescriptionItem[] }
   | { type: "simple"; items: SimpleItem[] }
   | { type: "icon"; items: IconItem[] }
@@ -65,6 +65,7 @@ function NavAnchor({
 
 const navigationLinks: TopLink[] = [
   { href: "/", label: "Home" },
+  { href: "/faucet", label: "Faucet" },
   {
     label: "Product",
     submenu: true,
