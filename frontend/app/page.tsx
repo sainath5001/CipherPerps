@@ -2,13 +2,14 @@ import Image from "next/image";
 import Link from "next/link";
 
 import LandingNavbar from "@/components/ui/navigation-menu-4";
+import { CinematicFooter } from "@/components/ui/motion-footer";
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen">
+    <main className="relative min-h-screen overflow-x-hidden bg-background">
       <LandingNavbar />
 
-      <div className="mx-auto max-w-6xl px-4 py-6">
+      <div className="relative z-10 mx-auto max-w-6xl rounded-b-3xl border-b border-border bg-background px-4 py-6 shadow-[0_40px_90px_-35px_rgba(0,0,0,0.85)]">
         <section id="why" className="mt-10 grid gap-8 lg:grid-cols-2 lg:items-center">
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-border bg-panel/40 px-3 py-1 text-xs text-slate-300">
@@ -102,19 +103,9 @@ export default function HomePage() {
             </div>
           </div>
         </section>
-
-        <footer id="footer" className="mt-16 rounded-2xl border border-border bg-panel/30 p-6 text-sm text-slate-400 backdrop-blur">
-          <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
-            <div>
-              <div className="font-semibold text-slate-200">CipherPerps</div>
-              <div className="mt-1">Hackathon MVP • Sepolia demo</div>
-            </div>
-            <Link href="/app" className="rounded-xl bg-cyan-400 px-4 py-2 text-sm font-semibold text-slate-950">
-              Open App
-            </Link>
-          </div>
-        </footer>
       </div>
+
+      <CinematicFooter />
     </main>
   );
 }
