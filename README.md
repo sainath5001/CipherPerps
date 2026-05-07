@@ -1,9 +1,10 @@
 # CipherPerps
 
-CipherPerps is a **Sepolia demo** of a perpetuals-style trading app with a simple onchain MVP and a modern Next.js frontend.
+CipherPerps is a **Sepolia demo** of a perpetuals-style trading app with a simple onchain MVP, a Zama-FHE-ready architecture, and a modern Next.js frontend.
 
 - **Frontend**: Next.js App Router + TypeScript + Tailwind CSS + wagmi/viem + RainbowKit
 - **Contracts**: Foundry (Solidity) MVP modules (PositionManager, TradingEngine, PriceOracle, LiquidationEngine) + `MockUSDC`
+- **Zama FHE-ready**: contracts type position size & leverage as `euint256` (placeholder today, real FHEVM next), and the frontend already wires the **Zama Relayer SDK** for encrypted-input building.
 - **Current demo flow**: `/faucet` → mint MockUSDC → approve → `/app` → deposit collateral → open/close a position
 
 ## Repo structure
@@ -57,7 +58,62 @@ The contract layout (under `contracts/src/`) is intentionally minimal for a demo
 - **`TradingEngine.sol`**: simplified PnL math placeholder (demo logic).
 - **`PriceOracle.sol`**: Chainlink adapter returning ETH price normalized to `1e8`.
 - **`LiquidationEngine.sol`**: liquidation gate + entrypoint (maintenance-margin style checks).
-- **`fhe/FheTypes.sol`**: placeholder types for future Zama FHE integration.
+- **`fhe/FheTypes.sol`**: defines a placeholder **`euint256`** user-defined type (and `FheUint256` wrap/unwrap library). This lets `PositionManager`, `TradingEngine`, and `LiquidationEngine` already use `euint256` in their public API and storage so the swap to real Zama FHEVM types is a localized change.
+
+## Zama FHE integration
+
+CipherPerps is structured to graduate from a plaintext MVP to a confidential perpetuals dApp powered by **Zama FHEVM**.
+
+What this means in practice today:
+
+- **Contracts (FHE-shaped API, plaintext math for now)**
+  - `contracts/src/fhe/FheTypes.sol` defines a placeholder `euint256` user-defined value type.
+  - `PositionManager.openPosition(euint256 size, euint256 leverage, bool isLong)` already takes `euint256` for sensitive trader inputs.
+  - `TradingEngine` exposes `computeLoss` and `computePnl` returning `euint256`, so loss/PnL stay encrypted-by-type.
+  - `LiquidationEngine` operates over an `euint256`-typed position payload and a price-based health check.
+  - The math is currently plaintext (`uint256` underneath), so onchain logic is identical to a non-FHE MVP — but the **types and function signatures are already “FHE-correct”**.
+- **Frontend (Zama Relayer SDK wired)**
+  - `frontend/package.json` depends on `@zama-fhe/relayer-sdk`.
+  - `frontend/lib/encryption.ts` initializes the SDK (`initSDK`, `createInstance`, `SepoliaConfig`) and builds **encrypted inputs** with `instance.createEncryptedInput(...).add256(value).encrypt()` to produce **ciphertext handles + an input proof** ready for FHEVM contracts.
+  - `frontend/components/TradingPanel.tsx` and `PositionCard.tsx` reference this module and document that the next Solidity iteration will accept `externalEuint*` + `bytes proof` on `openPosition`, then import them onchain via `FHE.fromExternal(handle, proof)`.
+
+What is intentionally **not** done in this MVP (so it’s clear):
+
+- The deployed Sepolia contracts do **not** yet take `externalEuint*` + `bytes proof` parameters; they accept the placeholder `euint256` (a `uint256` wrapper).
+- The frontend currently calls `openPosition` with placeholder values. The encryption module is plumbed in but not yet used on the live tx path.
+- User-decryption flows (reading encrypted state back) are stubbed in `lib/encryption.ts` as a follow-up.
+
+### FHE flow (target architecture)
+
+```mermaid
+flowchart LR
+  subgraph Browser["Browser"]
+    UI["Trading UI<br/>TradingPanel.tsx"]
+    SDK["@zama-fhe/relayer-sdk<br/>encryptValues()"]
+  end
+
+  subgraph Sepolia["Sepolia / FHEVM"]
+    PM["PositionManager<br/>(externalEuint256 size, leverage, bytes proof)"]
+    TE["TradingEngine<br/>computeLoss/PnL (euint256)"]
+    LE["LiquidationEngine<br/>health check"]
+    REL["Zama Relayer<br/>+ KMS"]
+  end
+
+  UI --> SDK
+  SDK -->|"handles + inputProof"| PM
+  PM -->|"FHE.fromExternal(handle, proof)"| TE
+  PM --> LE
+  PM <--> REL
+  SDK <--> REL
+```
+
+### Migration checklist (MVP → FHE)
+
+- Replace `euint256` in `contracts/src/fhe/FheTypes.sol` with **real Zama FHEVM types** (`@fhevm/solidity` imports, `FHE.*` helpers).
+- Update `PositionManager.openPosition` (and any input-taking entrypoints) to accept `externalEuint256 size, externalEuint256 leverage, bytes proof`, then call `FHE.fromExternal(handle, proof)`.
+- Switch `TradingEngine` math to FHE ops (`FHE.sub`, `FHE.mul`, `FHE.select`, etc.) and grant ACL access where needed (`FHE.allow`, `FHE.allowThis`).
+- Wire `frontend/components/TradingPanel.tsx` to call `encryptValues({ contractAddress, userAddress, values })` from `lib/encryption.ts` and pass `handles[i]` + `inputProof` to `openPosition`.
+- Implement user-decryption in `lib/encryption.ts` against the relayer for reading encrypted PnL/positions back into the UI.
 
 ## Frontend pages
 
