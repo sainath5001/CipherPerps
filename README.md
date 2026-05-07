@@ -21,10 +21,10 @@ flowchart TB
   end
 
   subgraph Frontend[Next.js frontend]
-    UI[UI صفحات\n/  /faucet  /app]
-    W[wagmi + viem\n(read/write contracts)]
-    RK[RainbowKit\nConnectButton]
-    CFG[Contract addresses + ABIs\nfrontend/lib/contracts.ts]
+    UI[UI routes<br/>/  /faucet  /app]
+    W[wagmi + viem<br/>(read/write contracts)]
+    RK[RainbowKit<br/>ConnectButton]
+    CFG[Contract addresses + ABIs<br/>frontend/lib/contracts.ts]
   end
 
   subgraph Sepolia[Sepolia network]
