@@ -365,7 +365,15 @@ export function CinematicFooter() {
 
           <div className="relative z-20 flex w-full flex-col items-center justify-between gap-6 px-6 pb-8 md:flex-row md:px-12">
             <div className="order-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground md:order-1 md:text-xs">
-              © {new Date().getFullYear()} CipherPerps • Hackathon MVP
+              © {new Date().getFullYear()} CipherPerps •{" "}
+              <a
+                href="https://www.zama.ai/"
+                target="_blank"
+                rel="noreferrer"
+                className="underline-offset-4 transition-colors hover:text-foreground hover:underline"
+              >
+                Powered by Zama FHE
+              </a>
             </div>
 
             <div className="footer-glass-pill order-1 flex cursor-default items-center gap-2 rounded-full border-border/50 px-6 py-3 md:order-2">
