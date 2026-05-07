@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { GlowCard } from "@/components/ui/spotlight-card";
 import { CONTRACTS, mockUsdcAbi } from "@/lib/contracts";
 
 const MINT_AMOUNT = parseUnits("10000", 6);
@@ -129,7 +130,7 @@ export function FaucetCard() {
   const busy = isPending || isConfirming;
 
   return (
-    <div className="mx-auto max-w-6xl">
+    <GlowCard glowColor="blue" customSize fluid className="mx-auto w-full max-w-6xl shadow-black/40">
       <div className="mb-8 text-center">
         <div className="mb-4 flex justify-center">
           <div className="rounded-full bg-primary/15 p-4 ring-1 ring-primary/25">
@@ -354,6 +355,6 @@ export function FaucetCard() {
           )}
         </CardContent>
       </Card>
-    </div>
+    </GlowCard>
   );
 }
