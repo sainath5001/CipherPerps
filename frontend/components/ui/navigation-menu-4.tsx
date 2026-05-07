@@ -1,6 +1,7 @@
 "use client";
 
 import { BookOpenIcon, InfoIcon, LifeBuoyIcon } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
@@ -192,8 +193,15 @@ export default function LandingNavbar() {
 
           <div className="flex items-center gap-6">
             <Link href="/" className="flex items-center gap-2 text-primary hover:text-primary/90">
-              <span className="grid size-8 place-items-center rounded-lg border border-border bg-secondary text-xs font-semibold text-secondary-foreground">
-                CP
+              <span className="grid size-8 place-items-center overflow-hidden rounded-lg border border-border bg-secondary">
+                <Image
+                  src="/logo.png"
+                  alt="CipherPerps logo"
+                  width={32}
+                  height={32}
+                  className="size-7 object-contain"
+                  priority
+                />
               </span>
               <span className="hidden font-semibold tracking-tight sm:inline">CipherPerps</span>
             </Link>
