@@ -15,25 +15,25 @@ CipherPerps is a **Sepolia demo** of a perpetuals-style trading app with a simpl
 
 ```mermaid
 flowchart TB
-  subgraph User
-    U[Trader]
-    MM[MetaMask / Wallet]
+  subgraph User["User"]
+    U["Trader"]
+    MM["MetaMask / Wallet"]
   end
 
-  subgraph Frontend[Next.js frontend]
-    UI[UI routes<br/>/  /faucet  /app]
-    W[wagmi + viem<br/>(read/write contracts)]
-    RK[RainbowKit<br/>ConnectButton]
-    CFG[Contract addresses + ABIs<br/>frontend/lib/contracts.ts]
+  subgraph Frontend["Next.js frontend"]
+    UI["UI routes<br/>/  /faucet  /app"]
+    W["wagmi + viem<br/>read/write contracts"]
+    RK["RainbowKit<br/>ConnectButton"]
+    CFG["Contract addresses + ABIs<br/>frontend/lib/contracts.ts"]
   end
 
-  subgraph Sepolia[Sepolia network]
-    USDC[MockUSDC (ERC20, 6 decimals)]
-    PM[PositionManager]
-    TE[TradingEngine]
-    ORA[PriceOracle]
-    LE[LiquidationEngine]
-    CL[(Chainlink ETH/USD feed)]
+  subgraph Sepolia["Sepolia network"]
+    USDC["MockUSDC<br/>ERC20, 6 decimals"]
+    PM["PositionManager"]
+    TE["TradingEngine"]
+    ORA["PriceOracle"]
+    LE["LiquidationEngine"]
+    CL[("Chainlink ETH/USD feed")]
   end
 
   U --> UI
@@ -147,8 +147,8 @@ This file is the source of truth for the Sepolia addresses used by `/faucet` and
 ```mermaid
 sequenceDiagram
   participant User
-  participant FE as Frontend (/faucet, /app)
-  participant Wallet as Wallet (MetaMask)
+  participant FE as "Frontend (/faucet, /app)"
+  participant Wallet as "Wallet (MetaMask)"
   participant USDC as MockUSDC
   participant PM as PositionManager
   participant Oracle as PriceOracle
