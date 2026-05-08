@@ -45,8 +45,8 @@ export default {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
-        panel: "rgb(17 24 39)", // slate-900
-        panel2: "rgb(15 23 42)", // slate-950-ish
+        panel: "rgb(10 10 10)", // #0A0A0A — AMOLED secondary panels
+        panel2: "rgb(17 17 17)", // #111111 — inner containers / tiles
       },
       keyframes: {
         "accordion-down": {

@@ -4,33 +4,34 @@
 
 @layer base {
   :root {
-    --background: 0 0% 0%;
-    --foreground: 215 20% 91%;
+    /* AMOLED-style neutral black palette (no slate-blue tint). */
+    --background: 0 0% 0%; /* #000000 */
+    --foreground: 0 0% 91%; /* near white */
 
-    --card: 222 47% 11%;
-    --card-foreground: 215 20% 91%;
+    --card: 0 0% 4%; /* ~#0A0A0A */
+    --card-foreground: 0 0% 91%;
 
-    --popover: 222 47% 11%;
-    --popover-foreground: 215 20% 91%;
+    --popover: 0 0% 4%; /* ~#0A0A0A */
+    --popover-foreground: 0 0% 91%;
 
-    --primary: 189 94% 43%;
-    --primary-foreground: 222 47% 6%;
+    --primary: 189 94% 43%; /* cyan accent — kept */
+    --primary-foreground: 0 0% 4%;
 
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 215 20% 91%;
+    --secondary: 0 0% 9%; /* ~#171717 */
+    --secondary-foreground: 0 0% 91%;
 
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 16% 65%;
+    --muted: 0 0% 9%;
+    --muted-foreground: 0 0% 65%;
 
-    --accent: 217 33% 17%;
-    --accent-foreground: 215 20% 91%;
+    --accent: 0 0% 9%;
+    --accent-foreground: 0 0% 91%;
 
     --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 217 33% 20%;
-    --input: 217 33% 20%;
-    --ring: 189 94% 43%;
+    --border: 0 0% 12%; /* ~#1F1F1F */
+    --input: 0 0% 12%;
+    --ring: 189 94% 43%; /* cyan focus ring */
 
     --radius: 0.75rem;
   }
