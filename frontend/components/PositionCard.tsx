@@ -80,10 +80,6 @@ export function PositionCard() {
         )}
       </div>
 
-      <div className="mt-4 text-xs text-slate-500">
-        “Decrypted” fields are currently plaintext placeholders until the Solidity ABI is updated to accept external
-        ciphertext handles + proof (Zama relayer flow). The encryption module is prepared in `lib/encryption.ts`.
-      </div>
     </section>
   );
 }

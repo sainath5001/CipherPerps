@@ -145,12 +145,7 @@ export function TradingPanel() {
 
         {!isConnected ? (
           <div className="mt-2 text-xs text-slate-500">Connect your wallet to trade.</div>
-        ) : (
-          <div className="mt-2 text-xs text-slate-500">
-            Note: deployed Sepolia contracts currently accept placeholder encrypted inputs. Zama relayer encryption is
-            wired under `lib/encryption.ts` for the next Solidity iteration.
-          </div>
-        )}
+        ) : null}
       </div>
     </section>
   );
